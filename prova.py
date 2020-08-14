@@ -40,6 +40,7 @@ def disarm():
                 0, 0, 0, 0, 0, 0  # unused parameters for this command
         )
 
+#comando per decollo
 def cmd_takeoff(height):
         #set modalita di guida
         set_mode('GUIDED')
@@ -59,16 +60,66 @@ def cmd_takeoff(height):
                 0,  # param6
                 altitude)  # param7
 
+#comando per atterraggio verticale in posizione
 def cmd_land():
         set_mode("LAND")
+
+#comando per ritorno alla base
+def cmd_rtl():
+        set_mode("RTL")
+
+def cmd_move_to_ned(dX,dY,dZ,dYaw):
+        autopilot.mav.set_position_target_local_ned_send(
+                0,  # timestamp
+                autopilot.target_system,  # target system_id
+                autopilot.target_component,  # target component id
+                mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,
+                0b1111101111111000,  # mask specifying use-only-x-y-z-yaw
+                dX,  # x
+                dY,  # y
+                -dZ,  # z
+                0,  # vx
+                0,  # vy
+                0,  # vz
+                0,  # afx
+                0,  # afy
+                0,  # afz
+                dYaw,  # yaw
+                0,  # yawrate
+        )
+
+
+#relativo al mare altezza 600 per mappa
+def cmd_move_to_gps(lat,lon,alt):
+    """
+    Send SET_POSITION_TARGET_GLOBAL_INT command to request the vehicle fly to a specified location.
+    """
+    set_mode("GUIDED")
+    autopilot.mav.set_position_target_global_int_send(
+        0,  # timestamp
+        autopilot.target_system,  # target system_id
+        autopilot.target_component,  # target component id
+        mavutil.mavlink.MAV_FRAME_GLOBAL_INT, # frame
+        0b0000111111111000, # type_mask (only speeds enabled)
+        lat*1e7, # lat_int - X Position in WGS84 frame in 1e7 * meters
+        lon*1e7, # lon_int - Y Position in WGS84 frame in 1e7 * meters
+        alt, # alt - Altitude in meters in AMSL altitude, not WGS84 if absolute or relative, above terrain if GLOBAL_TERRAIN_ALT_INT
+        0, # X velocity in NED frame in m/s
+        0, # Y velocity in NED frame in m/s
+        0, # Z velocity in NED frame in m/s
+        0, 0, 0, # afx, afy, afz acceleration (not supported yet, ignored in GCS_Mavlink)
+        0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
 
 
 
 if __name__ == "__main__":
         arm()
         cmd_takeoff(10)
-        time.sleep(30)
-        cmd_land()
+        time.sleep(10)
+        cmd_move_to_gps(-35.3631386609230, 149.16303429167112, 600.0)
+        #cmd_move_to_ned(100, 100, 2, 0)
+        time.sleep(100)
+        cmd_rtl()
         time.sleep(30)
         disarm()
 
