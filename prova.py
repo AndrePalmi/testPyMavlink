@@ -1,16 +1,7 @@
 import time
 from pymavlink import mavutil
 
-
-def set_mode(mode):
-        # Check if mode is available
-        # Get mode ID
-        mode_id = autopilot.mode_mapping()[mode]
-        autopilot.mav.set_mode_send(
-                autopilot.target_system,
-                mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-                mode_id)
-
+#attenzione non posso definire in una funzione altrimenti non ho autopilot per dopo
 mavutil.set_dialect("ardupilotmega")
 autopilot = mavutil.mavlink_connection('udpin:localhost:14551')
 autopilot.wait_heartbeat()
@@ -20,6 +11,18 @@ msg = None
 while msg is None:
         msg = autopilot.recv_msg()
 print(msg)
+
+#funzione per il set della mod, eventualmente posso farmi anche le 3/4 che mi servono
+def set_mode(mode):
+        # Check if mode is available
+        # Get mode ID
+        mode_id = autopilot.mode_mapping()[mode]
+        autopilot.mav.set_mode_send(
+                autopilot.target_system,
+                mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
+                mode_id)
+
+#funzione per attivare i motori
 def arm():
         autopilot.mav.command_long_send(
         1, # autopilot system id
@@ -68,6 +71,7 @@ def cmd_land():
 def cmd_rtl():
         set_mode("RTL")
 
+#comando per movimento rispeto NED
 def cmd_move_to_ned(dX,dY,dZ,dYaw):
         autopilot.mav.set_position_target_local_ned_send(
                 0,  # timestamp
@@ -88,7 +92,7 @@ def cmd_move_to_ned(dX,dY,dZ,dYaw):
                 0,  # yawrate
         )
 
-
+#comando per movimento rispetto posizione
 #relativo al mare altezza 600 per mappa
 def cmd_move_to_gps(lat,lon,alt):
     """
@@ -110,16 +114,32 @@ def cmd_move_to_gps(lat,lon,alt):
         0, 0, 0, # afx, afy, afz acceleration (not supported yet, ignored in GCS_Mavlink)
         0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
 
+#cerchio raggi non funzionante
+def cmd_circle(radius):
+        from pymavlink import mavutil
+        set_mode("GUIDED")
+        autopilot.mav.command_send(
+                1,  # target_system
+                1,  # target_component
+                mavutil.mavlink.MAV_CMD_SET_GUIDED_SUBMODE_CIRCLE,  # command
+                0,  # confirmation
+                radius,  # param1
+                0,  # param2
+                0,  # param3
+                0,  # param4
+                0,  # param5
+                0)  # param7
 
 
 if __name__ == "__main__":
         arm()
-        cmd_takeoff(10)
+        cmd_takeoff(10) #ok
         time.sleep(10)
-        cmd_move_to_gps(-35.3631386609230, 149.16303429167112, 600.0)
-        #cmd_move_to_ned(100, 100, 2, 0)
-        time.sleep(100)
-        cmd_rtl()
+        cmd_circle(20)  # err
+        #cmd_move_to_gps(-35.3631386609230, 149.16303429167112, 600.0) #ok
+        #cmd_move_to_ned(100, 100, 2, 0) #ok
         time.sleep(30)
-        disarm()
+        cmd_rtl()  #ok
+        time.sleep(30)
+        #disarm()  #ok
 
