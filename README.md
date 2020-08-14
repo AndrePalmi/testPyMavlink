@@ -1,5 +1,6 @@
 ## testPyMavlink
-<<<<<<< HEAD
-Cartella con test PyMavlink
-=======
->>>>>>> master
+
+# Cartella con test PyMavlink
+
+proviamo a comunicare con il simulatore
+
