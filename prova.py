@@ -2,7 +2,7 @@ import time
 from pymavlink import mavutil
 
 
-def setMode(mode):
+def set_mode(mode):
         # Check if mode is available
         # Get mode ID
         mode_id = autopilot.mode_mapping()[mode]
@@ -12,45 +12,37 @@ def setMode(mode):
                 mode_id)
 
 mavutil.set_dialect("ardupilotmega")
-
 autopilot = mavutil.mavlink_connection('udpin:localhost:14551')
 autopilot.wait_heartbeat()
 print("Heartbeat from system (system %u component %u)" % (autopilot.target_system, autopilot.target_system))
 msg = None
-
 # wait for autopilot connection
 while msg is None:
         msg = autopilot.recv_msg()
-
 print(msg)
+def arm():
+        autopilot.mav.command_long_send(
+        1, # autopilot system id
+        1, # autopilot component id
+        400, # command id, ARM/DISARM
+        0, # confirmation
+        1, # arm!
+        0,0,0,0,0,0 # unused parameters for this command
+        )
 
-# # The values of these heartbeat fields is not really important here
-# # I just used the same numbers that QGC uses
-# # It is standard practice for any system communicating via mavlink emit the HEARTBEAT message at 1Hz! Your autopilot may not behave the way you want otherwise!
-# autopilot.mav.heartbeat_send(
-# 6, # type
-# 8, # autopilot
-# 192, # base_mode
-# 0, # custom_mode
-# 4, # system_status
-# 3  # mavlink_version
-# )
-
-autopilot.mav.command_long_send(
-1, # autopilot system id
-1, # autopilot component id
-400, # command id, ARM/DISARM
-0, # confirmation
-1, # arm!
-0,0,0,0,0,0 # unused parameters for this command
-)
-
-time.sleep(2)
-
+def disarm():
+        autopilot.mav.command_long_send(
+                1,  # autopilot system id
+                1,  # autopilot component id
+                400,  # command id, ARM/DISARM
+                0,  # confirmation
+                0,  # disarm!
+                0, 0, 0, 0, 0, 0  # unused parameters for this command
+        )
 
 def cmd_takeoff(height):
         #set modalita di guida
-        setMode('GUIDED')
+        set_mode('GUIDED')
         #eseguo decollo
         altitude = float(height)
         print("Take Off started")
@@ -67,15 +59,16 @@ def cmd_takeoff(height):
                 0,  # param6
                 altitude)  # param7
 
+def cmd_land():
+        set_mode("LAND")
 
-cmd_takeoff(40)
-time.sleep(20)
 
-autopilot.mav.command_long_send(
-1, # autopilot system id
-1, # autopilot component id
-400, # command id, ARM/DISARM
-0, # confirmation
-0, # disarm!
-0,0,0,0,0,0 # unused parameters for this command
-)
+
+if __name__ == "__main__":
+        arm()
+        cmd_takeoff(10)
+        time.sleep(30)
+        cmd_land()
+        time.sleep(30)
+        disarm()
+
