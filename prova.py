@@ -33,6 +33,7 @@ def arm():
         0,0,0,0,0,0 # unused parameters for this command
         )
 
+#funzione per spegnere i motori
 def disarm():
         autopilot.mav.command_long_send(
                 1,  # autopilot system id
@@ -45,6 +46,7 @@ def disarm():
 
 #comando per decollo
 def cmd_takeoff(height):
+
         #set modalita di guida
         set_mode('GUIDED')
         #eseguo decollo
@@ -62,6 +64,17 @@ def cmd_takeoff(height):
                 0,  # param5
                 0,  # param6
                 altitude)  # param7
+
+        #definisco l'obbiettivo da raggiungere
+        objective = autopilot.field('GPS_RAW_INT', 'alt', 0) / 1.0e3 + height
+
+        #ciclo per aspettare raggiungimento quota
+        while True:
+                alt = autopilot.location().alt
+                if(alt >= objective - 1):
+                        break
+                time.sleep(0.5)
+
 
 #comando per atterraggio verticale in posizione
 def cmd_land():
@@ -133,9 +146,9 @@ def cmd_circle(radius):
 
 if __name__ == "__main__":
         arm()
-        cmd_takeoff(10) #ok
+        cmd_takeoff(40) #ok
         time.sleep(10)
-        cmd_circle(20)  # err
+        #cmd_circle(20)  # err
         #cmd_move_to_gps(-35.3631386609230, 149.16303429167112, 600.0) #ok
         #cmd_move_to_ned(100, 100, 2, 0) #ok
         time.sleep(30)
