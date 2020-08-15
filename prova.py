@@ -14,6 +14,7 @@ print(msg)
 
 #funzione per il set della mod, eventualmente posso farmi anche le 3/4 che mi servono
 def set_mode(mode):
+
         # Check if mode is available
         # Get mode ID
         mode_id = autopilot.mode_mapping()[mode]
@@ -24,6 +25,7 @@ def set_mode(mode):
 
 #funzione per attivare i motori
 def arm():
+
         autopilot.mav.command_long_send(
         1, # autopilot system id
         1, # autopilot component id
@@ -35,6 +37,7 @@ def arm():
 
 #funzione per spegnere i motori
 def disarm():
+
         autopilot.mav.command_long_send(
                 1,  # autopilot system id
                 1,  # autopilot component id
@@ -86,6 +89,7 @@ def cmd_rtl():
 
 #comando per movimento rispeto NED
 def cmd_move_to_ned(dX,dY,dZ,dYaw):
+
         autopilot.mav.set_position_target_local_ned_send(
                 0,  # timestamp
                 autopilot.target_system,  # target system_id
@@ -108,9 +112,7 @@ def cmd_move_to_ned(dX,dY,dZ,dYaw):
 #comando per movimento rispetto posizione
 #relativo al mare altezza 600 per mappa
 def cmd_move_to_gps(lat,lon,alt):
-    """
-    Send SET_POSITION_TARGET_GLOBAL_INT command to request the vehicle fly to a specified location.
-    """
+
     set_mode("GUIDED")
     autopilot.mav.set_position_target_global_int_send(
         0,  # timestamp
@@ -130,18 +132,16 @@ def cmd_move_to_gps(lat,lon,alt):
             current_lat = autopilot.location().lat
             current_long = autopilot.location().lng
             current_alt = autopilot.location().alt
-            print("long :" + str(current_long) +" lat" + str(current_lat) +" alt" + str(current_alt))
+            #print("long :" + str(current_long) +" lat" + str(current_lat) +" alt" + str(current_alt))
 
             if ((current_alt >= alt - 1 and current_alt <= alt + 1) and (abs(current_lat - lat) <= 0.000001) and (abs(current_long - lon) <= 0.000001)):
-                    print(current_long)
-                    print(current_lat)
-                    print(current_alt)
                     break
 
             time.sleep(1)
 
 #cerchio raggi non funzionante
 def cmd_circle(radius):
+
         from pymavlink import mavutil
         set_mode("GUIDED")
         autopilot.mav.command_send(
@@ -158,13 +158,12 @@ def cmd_circle(radius):
 
 
 if __name__ == "__main__":
+
         arm()
         cmd_takeoff(10) #ok
         #cmd_circle(20)  # err
         cmd_move_to_gps(-35.3631386609230, 149.16303429167112, 600.0) #ok
         #cmd_move_to_ned(100, 100, 2, 0) #ok
-        time.sleep(10)
         cmd_rtl()  #ok
-        time.sleep(30)
         #disarm()  #ok
 
