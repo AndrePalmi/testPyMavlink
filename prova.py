@@ -126,6 +126,19 @@ def cmd_move_to_gps(lat,lon,alt):
         0, # Z velocity in NED frame in m/s
         0, 0, 0, # afx, afy, afz acceleration (not supported yet, ignored in GCS_Mavlink)
         0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
+    while True:
+            current_lat = autopilot.location().lat
+            current_long = autopilot.location().lng
+            current_alt = autopilot.location().alt
+            print("long :" + str(current_long) +" lat" + str(current_lat) +" alt" + str(current_alt))
+
+            if ((current_alt >= alt - 1 and current_alt <= alt + 1) and (abs(current_lat - lat) <= 0.000001) and (abs(current_long - lon) <= 0.000001)):
+                    print(current_long)
+                    print(current_lat)
+                    print(current_alt)
+                    break
+
+            time.sleep(1)
 
 #cerchio raggi non funzionante
 def cmd_circle(radius):
@@ -146,12 +159,11 @@ def cmd_circle(radius):
 
 if __name__ == "__main__":
         arm()
-        cmd_takeoff(40) #ok
-        time.sleep(10)
+        cmd_takeoff(10) #ok
         #cmd_circle(20)  # err
-        #cmd_move_to_gps(-35.3631386609230, 149.16303429167112, 600.0) #ok
+        cmd_move_to_gps(-35.3631386609230, 149.16303429167112, 600.0) #ok
         #cmd_move_to_ned(100, 100, 2, 0) #ok
-        time.sleep(30)
+        time.sleep(10)
         cmd_rtl()  #ok
         time.sleep(30)
         #disarm()  #ok
