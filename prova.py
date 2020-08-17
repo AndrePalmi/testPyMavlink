@@ -132,6 +132,7 @@ def cmd_move_to_gps(lat,lng,alt):
             if ((alt - 1 <= current_alt <= alt + 1)
                     and (abs(current_lat - lat) <= 0.000001)
                     and (abs(current_lng - lng) <= 0.000001)):
+                    print("Position desired reached:\n  -lat: %.6f;\n  -lng: %.6f;\n  -alt: %.1f [m];" %(lat,lng,alt))
                     break
 
             time.sleep(0.5)
