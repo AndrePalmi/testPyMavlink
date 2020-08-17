@@ -1,20 +1,8 @@
 import time
 from pymavlink import mavutil
 
-#attenzione non posso definire in una funzione altrimenti non ho autopilot per dopo
-mavutil.set_dialect("ardupilotmega")
-autopilot = mavutil.mavlink_connection('udpin:localhost:14551')
-autopilot.wait_heartbeat()
-print("Heartbeat from system (system %u component %u)" % (autopilot.target_system, autopilot.target_system))
-msg = None
-# wait for autopilot connection
-while msg is None:
-        msg = autopilot.recv_msg()
-print(msg)
-
-#funzione per il set della mod, eventualmente posso farmi anche le 3/4 che mi servono
+# funzione per il set della mod, eventualmente posso farmi anche le 3/4 che mi servono
 def set_mode(mode):
-
         # Check if mode is available
         # Get mode ID
         mode_id = autopilot.mode_mapping()[mode]
@@ -23,7 +11,7 @@ def set_mode(mode):
                 mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
                 mode_id)
 
-#funzione per attivare i motori
+# funzione per attivare i motori
 def arm():
 
         autopilot.mav.command_long_send(
@@ -35,7 +23,7 @@ def arm():
         0,0,0,0,0,0 # unused parameters for this command
         )
 
-#funzione per spegnere i motori
+# funzione per spegnere i motori
 def disarm():
 
         autopilot.mav.command_long_send(
@@ -47,14 +35,15 @@ def disarm():
                 0, 0, 0, 0, 0, 0  # unused parameters for this command
         )
 
-#comando per decollo
+# comando per decollo
 def cmd_takeoff(height):
 
-        #set modalita di guida
+        # set modalita di guida
         set_mode('GUIDED')
-        #eseguo decollo
+        # eseguo decollo
         altitude = float(height)
         print("Take Off started")
+
         autopilot.mav.command_long_send(
                 1,  # target_system
                 1,  # target_component
@@ -68,26 +57,29 @@ def cmd_takeoff(height):
                 0,  # param6
                 altitude)  # param7
 
-        #definisco l'obbiettivo da raggiungere
+        # definisco l'obiettivo da raggiungere
         objective = autopilot.field('GPS_RAW_INT', 'alt', 0) / 1.0e3 + height
 
-        #ciclo per aspettare raggiungimento quota
+        # loop to reach the height requested
         while True:
                 alt = autopilot.location().alt
+                # loop until the gap is 1 metre
                 if(alt >= objective - 1):
                         break
                 time.sleep(0.5)
 
+        print("Altitude: " + str(altitude) + "[m] reached")
 
-#comando per atterraggio verticale in posizione
+
+# comando per atterraggio verticale in posizione
 def cmd_land():
         set_mode("LAND")
 
-#comando per ritorno alla base
+# comando per ritorno alla base
 def cmd_rtl():
         set_mode("RTL")
 
-#comando per movimento rispeto NED
+# comando per movimento rispeto NED
 def cmd_move_to_ned(dX,dY,dZ,dYaw):
 
         autopilot.mav.set_position_target_local_ned_send(
@@ -109,11 +101,12 @@ def cmd_move_to_ned(dX,dY,dZ,dYaw):
                 0,  # yawrate
         )
 
-#comando per movimento rispetto posizione
-#relativo al mare altezza 600 per mappa
-def cmd_move_to_gps(lat,lon,alt):
+# comando per movimento rispetto posizione
+# relativo al mare altezza 600 per mappa
+def cmd_move_to_gps(lat,lng,alt):
 
     set_mode("GUIDED")
+
     autopilot.mav.set_position_target_global_int_send(
         0,  # timestamp
         autopilot.target_system,  # target system_id
@@ -121,28 +114,31 @@ def cmd_move_to_gps(lat,lon,alt):
         mavutil.mavlink.MAV_FRAME_GLOBAL_INT, # frame
         0b0000111111111000, # type_mask (only speeds enabled)
         lat*1e7, # lat_int - X Position in WGS84 frame in 1e7 * meters
-        lon*1e7, # lon_int - Y Position in WGS84 frame in 1e7 * meters
+        lng*1e7, # lon_int - Y Position in WGS84 frame in 1e7 * meters
         alt, # alt - Altitude in meters in AMSL altitude, not WGS84 if absolute or relative, above terrain if GLOBAL_TERRAIN_ALT_INT
         0, # X velocity in NED frame in m/s
         0, # Y velocity in NED frame in m/s
         0, # Z velocity in NED frame in m/s
         0, 0, 0, # afx, afy, afz acceleration (not supported yet, ignored in GCS_Mavlink)
         0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
+
     while True:
             current_lat = autopilot.location().lat
-            current_long = autopilot.location().lng
+            current_lng = autopilot.location().lng
             current_alt = autopilot.location().alt
-            #print("long :" + str(current_long) +" lat" + str(current_lat) +" alt" + str(current_alt))
+            # print("long :" + str(current_long) +" lat" + str(current_lat) +" alt" + str(current_alt))
 
-            if ((current_alt >= alt - 1 and current_alt <= alt + 1) and (abs(current_lat - lat) <= 0.000001) and (abs(current_long - lon) <= 0.000001)):
+            # check if the drone as reached the position demanded
+            if ((alt - 1 <= current_alt <= alt + 1)
+                    and (abs(current_lat - lat) <= 0.000001)
+                    and (abs(current_lng - lng) <= 0.000001)):
                     break
 
-            time.sleep(1)
+            time.sleep(0.5)
 
-#cerchio raggi non funzionante
+# cerchio raggi non funzionante
 def cmd_circle(radius):
 
-        from pymavlink import mavutil
         set_mode("GUIDED")
         autopilot.mav.command_send(
                 1,  # target_system
@@ -159,11 +155,24 @@ def cmd_circle(radius):
 
 if __name__ == "__main__":
 
+        mavutil.set_dialect("ardupilotmega")
+        autopilot = mavutil.mavlink_connection('udpin:localhost:14550')
+
+        autopilot.wait_heartbeat()
+        print("Heartbeat from system (system %u component %u)" % (autopilot.target_system, autopilot.target_system))
+        msg = None
+
+        # wait for autopilot connection
+        while msg is None:
+                msg = autopilot.recv_msg()
+        print(msg)
+
+        # functions test:
         arm()
-        cmd_takeoff(10) #ok
+        cmd_takeoff(10)
         #cmd_circle(20)  # err
-        cmd_move_to_gps(-35.3631386609230, 149.16303429167112, 600.0) #ok
-        #cmd_move_to_ned(100, 100, 2, 0) #ok
-        cmd_rtl()  #ok
-        #disarm()  #ok
+        cmd_move_to_gps(-35.3631386609230, 149.16303429167112, 600.0)
+        #cmd_move_to_ned(100, 100, 2, 0)
+        cmd_rtl()
+        #disarm()
 
