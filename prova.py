@@ -73,11 +73,36 @@ def cmd_takeoff(height):
 
 # comando per atterraggio verticale in posizione
 def cmd_land():
-        set_mode("LAND")
+        ground_lng = autopilot.field('GPS_RAW_INT', 'lon', 0)
+        ground_lat = autopilot.field('GPS_RAW_INT', 'lat', 0)
+        ground_alt = autopilot.field('GPS_RAW_INT', 'alt', 0) / 1.0e3
+
+        autopilot.mav.command_long_send(
+                1,  # target_system
+                1,  # target_component
+                mavutil.mavlink.MAV_CMD_NAV_LAND,  # command
+                0,  # confirmation
+                0,  # param1
+                0,  # param2
+                0,  # param3
+                float("nan"),  # param4
+                ground_lat,  # param5
+                ground_lng,  # param6
+                ground_alt)  # param7
 
 # comando per ritorno alla base
 def cmd_rtl():
-        set_mode("RTL")
+        autopilot.mav.command_long_send(1,
+                                        1,
+                               mavutil.mavlink.MAV_CMD_NAV_RETURN_TO_LAUNCH,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        0)
 
 # comando per movimento rispeto NED
 def cmd_move_to_ned(dX,dY,dZ,dYaw):
@@ -140,19 +165,18 @@ def cmd_move_to_gps(lat,lng,alt):
 # cerchio raggi non funzionante
 def cmd_circle(radius):
 
-        set_mode("GUIDED")
-        autopilot.mav.command_send(
-                1,  # target_system
-                1,  # target_component
-                mavutil.mavlink.MAV_CMD_SET_GUIDED_SUBMODE_CIRCLE,  # command
-                0,  # confirmation
-                radius,  # param1
-                0,  # param2
-                0,  # param3
-                0,  # param4
-                0,  # param5
-                0)  # param7
-
+        set_mode("CIRCLE")
+        # Set parameter value
+        # Set a parameter value TEMPORARILY to RAM. It will be reset to default on system reboot.
+        # Send the ACTION MAV_ACTION_STORAGE_WRITE to PERMANENTLY write the RAM contents to EEPROM.
+        # The parameter variable type is described by MAV_PARAM_TYPE in http://mavlink.org/messages/common.
+        autopilot.mav.param_set_send(
+                autopilot.target_system, autopilot.target_component,
+                b'CIRCLE_RADIUS',
+                10,
+                mavutil.mavlink.MAV_PARAM_TYPE_REAL32,
+                b'ALTITUDE',
+        )
 
 if __name__ == "__main__":
 
@@ -171,9 +195,10 @@ if __name__ == "__main__":
         # functions test:
         arm()
         cmd_takeoff(10)
-        #cmd_circle(20)  # err
-        cmd_move_to_gps(-35.3631386609230, 149.16303429167112, 600.0)
+        # cmd_circle(20)  # err
+        cmd_move_to_gps(-35.3631386609230, 149.16303429167112, 600)
+        cmd_land()
         #cmd_move_to_ned(100, 100, 2, 0)
-        cmd_rtl()
+        # cmd_rtl()
         #disarm()
 
