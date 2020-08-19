@@ -1,4 +1,4 @@
-Blockly.Blocks['text_length'] = {
+Blockly.Blocks['string_length'] = {
   init: function() {
     this.appendValueInput('VALUE')
         .setCheck('String')
