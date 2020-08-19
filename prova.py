@@ -1,23 +1,13 @@
 import time
 from pymavlink import mavutil
 
-
-# funzione per il set della mod, eventualmente posso farmi anche le 3/4 che mi servono
-def set_mode(mode):
-    # Check if mode is available
-    # Get mode ID
-    mode_id = autopilot.mode_mapping()[mode]
-    autopilot.mav.set_mode_send(
-        autopilot.target_system,
-        mavutil.mavlink.MAV_MODE_FLAG_CUSTOM_MODE_ENABLED,
-        mode_id)
-
-
 # method that arm the motors
 def arm():
     '''
         Arming the copter motors
-        '''
+    '''
+    # setting the mode
+    autopilot.set_mode("GUIDED")
 
     autopilot.mav.command_long_send(
         1,  # autopilot system id
@@ -27,6 +17,7 @@ def arm():
         1,  # arm!
         0, 0, 0, 0, 0, 0  # unused parameters for this command
     )
+    autopilot.motors_armed_wait()  # check if motors are armed correctly
 
 
 # method that disarm the motors
@@ -43,7 +34,7 @@ def disarm():
         0,  # disarm!
         0, 0, 0, 0, 0, 0  # unused parameters for this command
     )
-
+    autopilot.motors_disarmed_wait()  # check if motors are disarmed correctly
 
 # method for the take off of the copter at the height desidered
 def cmd_takeoff(height):
@@ -55,7 +46,7 @@ def cmd_takeoff(height):
     '''
 
     # setting the mode
-    set_mode('GUIDED')
+    autopilot.set_mode("GUIDED")
 
     altitude = float(height)
     print("Take Off started")
@@ -94,7 +85,9 @@ def cmd_takeoff(height):
 def cmd_land():
     '''
         Land the Copter
-        '''
+    '''
+    # setting the mode
+    autopilot.set_mode("GUIDED")
     ground_lng = autopilot.field('GPS_RAW_INT', 'lon', 0)
     ground_lat = autopilot.field('GPS_RAW_INT', 'lat', 0)
     ground_alt = autopilot.field('GPS_RAW_INT', 'alt', 0) / 1.0e3
@@ -117,7 +110,9 @@ def cmd_land():
 def cmd_rtl():
     '''
         Return the Copter to the place where it was lauch
-        '''
+    '''
+    # setting the mode
+    autopilot.set_mode("GUIDED")
     autopilot.mav.command_long_send(
             1,  # target_system
             1,  # target_component
@@ -141,6 +136,9 @@ def cmd_move_to_ned(dX, dY, dZ, dYaw):
                 from the actual position of the Copter
     :param dYaw: type 'float'
     '''
+    # setting the mode
+    autopilot.set_mode("GUIDED")
+
     autopilot.mav.set_position_target_local_ned_send(
         0,  # timestamp
         autopilot.target_system,  # target system_id
@@ -173,7 +171,8 @@ def cmd_move_to_gps(lat, lng, alt):
                 altitude (in metres [m]) that the Copter will reach
     '''
 
-    set_mode("GUIDED")
+    # setting the mode
+    autopilot.set_mode("GUIDED")
 
     autopilot.mav.set_position_target_global_int_send(
         0,  # timestamp
@@ -209,19 +208,19 @@ def cmd_move_to_gps(lat, lng, alt):
 
 
 # cerchio raggi non funzionante
-def cmd_circle(radius):
-    set_mode("CIRCLE")
-    # Set parameter value
-    # Set a parameter value TEMPORARILY to RAM. It will be reset to default on system reboot.
-    # Send the ACTION MAV_ACTION_STORAGE_WRITE to PERMANENTLY write the RAM contents to EEPROM.
-    # The parameter variable type is described by MAV_PARAM_TYPE in http://mavlink.org/messages/common.
-    autopilot.mav.param_set_send(
-        autopilot.target_system, autopilot.target_component,
-        b'CIRCLE_RADIUS',
-        10,
-        mavutil.mavlink.MAV_PARAM_TYPE_REAL32,
-        b'ALTITUDE',
-    )
+# def cmd_circle(radius):
+#     set_mode("CIRCLE")
+#     # Set parameter value
+#     # Set a parameter value TEMPORARILY to RAM. It will be reset to default on system reboot.
+#     # Send the ACTION MAV_ACTION_STORAGE_WRITE to PERMANENTLY write the RAM contents to EEPROM.
+#     # The parameter variable type is described by MAV_PARAM_TYPE in http://mavlink.org/messages/common.
+#     autopilot.mav.param_set_send(
+#         autopilot.target_system, autopilot.target_component,
+#         b'CIRCLE_RADIUS',
+#         10,
+#         mavutil.mavlink.MAV_PARAM_TYPE_REAL32,
+#         b'ALTITUDE',
+#     )
 
 
 if __name__ == "__main__":
