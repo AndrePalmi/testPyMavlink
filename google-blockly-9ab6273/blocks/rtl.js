@@ -3,7 +3,7 @@ Blockly.Blocks['rtl'] = {
     this.appendDummyInput()
         .appendField("RTL");
     this.setPreviousStatement(true, null);
-    this.setColour(230);
+    this.setColour(195);
  this.setTooltip("Return To Launch");
  this.setHelpUrl("");
   }
