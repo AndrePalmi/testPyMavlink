@@ -15,8 +15,52 @@ body {
   <p>
     <button onclick="showCode()">Show JavaScript</button>
     <button onclick="runCode()">Run JavaScript</button>
-    <button onclick="runCodePython()">Run Python</button>
+    <button onclick="runCodeP()">Run Python</button>
   </p>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js" type="text/javascript"></script> 
+<script src="http://www.skulpt.org/js/skulpt.min.js" type="text/javascript"></script> 
+<script src="http://www.skulpt.org/js/skulpt-stdlib.js" type="text/javascript"></script> 
+
+<script type="text/javascript"> 
+// output functions are configurable.  This one just appends some text
+// to a pre element.
+function outf(text) { 
+    var mypre = document.getElementById("output"); 
+    mypre.innerHTML = mypre.innerHTML + text; 
+} 
+function builtinRead(x) {
+    if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+            throw "File not found: '" + x + "'";
+    return Sk.builtinFiles["files"][x];
+}
+
+// Here's everything you need to run a python program in skulpt
+// grab the code from your textarea
+// get a reference to your pre element for output
+// configure the output function
+// call Sk.importMainWithBody()
+function runit(code) { 
+   // var prog = document.getElementById("yourcode").value; 
+   var prog = code;
+   var mypre = document.getElementById("output"); 
+   mypre.innerHTML = ''; 
+   Sk.pre = "output";
+   Sk.configure({output:outf, read:builtinRead}); 
+
+   var myPromise = Sk.misceval.asyncToPromise(function() {
+       return Sk.importMainWithBody("<stdin>", false, prog, true);
+   });
+   myPromise.then(function(mod) {
+       console.log('success');
+   },
+       function(err) {
+       console.log(err.toString());
+   });
+} 
+</script> 
+
 
 <script src="blockly_compressed.js"></script>
 <script src="javascript_compressed.js"></script>
@@ -54,6 +98,9 @@ body {
     <div id="blocklyDiv" style="height: 920px; width: 600px;">
     </div>
 </div>
+
+
+
 
 <script src="msg/js/en.js"></script>
 
@@ -96,7 +143,7 @@ body {
       }
     }
 
-    function runCodePython() {
+    function runCodeP() {
       // Generate JavaScript code and run it.
       window.LoopTrap = 1000;
       Blockly.Python.INFINITE_LOOP_TRAP =
@@ -106,7 +153,7 @@ body {
       Blockly.Python.addReservedWords('code');
       var code = Blockly.Python.workspaceToCode(workspace);
 
-      // non sappiamo come eseguire il python salvato nella var code...
+      runit(code);
     }
   </script>
 
