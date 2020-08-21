@@ -246,6 +246,7 @@ if __name__ == "__main__":
 
     drone = Copter()
 
+    drone.connect()
     # functions test:
     drone.arm()
     drone.cmd_takeoff(10)
