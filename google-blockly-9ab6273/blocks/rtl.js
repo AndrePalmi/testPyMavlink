@@ -1,10 +1,11 @@
 Blockly.Blocks['rtl'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("RTL");
-    this.setPreviousStatement(true, null);
+        .appendField("RTL")
+        .appendField("Return to launch");
+    this.setPreviousStatement(true, 'RTL');
     this.setColour(195);
- this.setTooltip("Return To Launch");
- this.setHelpUrl("");
+    this.setTooltip("Return To Launch");
+    this.setHelpUrl("");
   }
 };
