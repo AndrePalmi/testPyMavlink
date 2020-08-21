@@ -11,10 +11,10 @@ Blockly.Blocks['gps_move'] = {
     this.appendDummyInput()
         .appendField("ALTITUDE")
         .appendField(new Blockly.FieldNumber(0, 0), "alt");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
+    this.setPreviousStatement(true, 'GPS MOVE');
+    this.setNextStatement(true, ['GPS MOVE', 'LAND', 'RTL']);
     this.setColour(120);
- this.setTooltip("Move following GPS coordinates");
- this.setHelpUrl("");
+    this.setTooltip("Move following GPS coordinates");
+    this.setHelpUrl("");
   }
 };
